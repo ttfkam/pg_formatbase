@@ -11,7 +11,7 @@ LANGUAGE sql IMMUTABLE STRICT AS $$
   )
   SELECT regexp_replace(string_agg(idx[((val / pow(base, g))::int % base) + 1], ''), '^0+', '')
   FROM generate_series(63, 0, -1) AS g, cte
-  WHERE base <= 64
+  WHERE base <= 64 AND base > 1
 $$;
 
 CREATE FUNCTION to_base(val integer, base integer)
