@@ -30,7 +30,7 @@ formatbase(PG_FUNCTION_ARGS)
 
   /* Base-0 & base-1 are non-sensical. Nothing about base-64 supported. */
   if (base < 2 || base > 64) {
-    return NULL;
+    return PG_RETURN_NULL();
   }
 
   /* Fast path for common values (and are the same in every base) */
