@@ -30,17 +30,17 @@ formatbase(PG_FUNCTION_ARGS)
 
   /* Base-0 & base-1 are non-sensical. Nothing about base-64 supported. */
   if (base < 2 || base > 64) {
-    return PG_RETURN_NULL();
+    PG_RETURN_NULL();
   }
 
   /* Fast path for common values (and are the same in every base) */
   switch (val) {
     case -1:
-      return PG_RETURN_TEXT_P(cstring_to_text("-1"));
+      PG_RETURN_TEXT_P(cstring_to_text("-1"));
     case 0:
-      return PG_RETURN_TEXT_P(cstring_to_text("0"));
+      PG_RETURN_TEXT_P(cstring_to_text("0"));
     case 1:
-      return PG_RETURN_TEXT_P(cstring_to_text("1"));
+      PG_RETURN_TEXT_P(cstring_to_text("1"));
     default:
       /* Fall through to continue processing */
   }
@@ -49,7 +49,7 @@ formatbase(PG_FUNCTION_ARGS)
   buffer_size = BUF_SIZES[base];
   buffer = palloc(sizeof(char) * buffer_size);
   if (buffer == NULL) {  /* out of memory */
-    return PG_RETURN_NULL();
+    PG_RETURN_NULL();
   }
   buffer += (buffer_size - 1);
   *buffer = '\0';
@@ -59,7 +59,7 @@ formatbase(PG_FUNCTION_ARGS)
   if (is_negative) {
     if (val < -9223372036854775807L) {  /* max 64-bit sign flip value */
       /* avoid overflow by simply punting */
-      return PG_RETURN_NULL();
+      PG_RETURN_NULL();
     }
     val = -val;
   }
@@ -74,5 +74,5 @@ formatbase(PG_FUNCTION_ARGS)
     *buffer = '-';
   }
 
-  return PG_RETURN_TEXT_P(cstring_to_text(buffer));
+  PG_RETURN_TEXT_P(cstring_to_text(buffer));
 }
