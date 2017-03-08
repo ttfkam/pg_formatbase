@@ -9,7 +9,7 @@ LANGUAGE sql IMMUTABLE STRICT AS $$
       '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-',
       '') AS idx
   )
-  SELECT regexp_replace(string_agg(idx[((val / pow(base, g))::int % base) + 1], ''), '^0+', '')
+  SELECT regexp_replace(string_agg(idx[((val / pow(base, g))::int % base) + 1], ''), '^0{1,63}', '')
   FROM generate_series(63, 0, -1) AS g, cte
   WHERE base <= 64 AND base > 1
 $$;
