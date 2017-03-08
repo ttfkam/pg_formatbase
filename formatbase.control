@@ -1,0 +1,4 @@
+# formatbase extension
+comment = 'format numbers by base'
+default_version = '1.0.0'
+relocatable = true
