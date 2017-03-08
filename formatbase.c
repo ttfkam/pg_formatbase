@@ -31,7 +31,7 @@ as_base(PG_FUNCTION_ARGS)
 
   /* Base-0 & base-1 are non-sensical. Nothing about base-64 supported. */
   if (base < 2 || base > 64) {
-    PG_RETURN_NULL();
+    elog(ERROR, "Output base out of range. Must be between 2 and 64.");
   }
 
   /* Fast path for common values (and are the same in every base) */
@@ -51,7 +51,8 @@ as_base(PG_FUNCTION_ARGS)
   if (is_negative) {
     /* greater than 64-bit sign flip value (one more negative than positive) */
     if (val == 0xFFFFFFFFFFFFFFFFLL) {
-      PG_RETURN_NULL();  /* avoid overflow by simply punting */
+      /* Avoid overflow by simply punting */
+      elog(ERROR, "Negative input value too large");
     }
     val = -val;
   }
@@ -60,7 +61,7 @@ as_base(PG_FUNCTION_ARGS)
   buffer_size = BUF_SIZES[base];
   buffer = palloc(sizeof(char) * buffer_size);
   if (buffer == NULL) {  /* out of memory */
-    PG_RETURN_NULL();
+      elog(ERROR, "Out of memory");
   }
   buffer += (buffer_size - 1);
   *buffer = '\0';
