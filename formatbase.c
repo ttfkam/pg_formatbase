@@ -49,8 +49,8 @@ formatbase(PG_FUNCTION_ARGS)
 
   /* Flip negatives for numeric operations below */
   if (is_negative) {
-    /* greater than 64-bit sign flip value */
-    if (val == -9223372036854775808LL) {
+    /* greater than 64-bit sign flip value (one more negative than positive) */
+    if (val == 0xFFFFFFFFFFFFFFFFLL) {
       PG_RETURN_NULL();  /* avoid overflow by simply punting */
     }
     val = -val;
