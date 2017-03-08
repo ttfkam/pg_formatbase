@@ -42,9 +42,6 @@ formatbase(PG_FUNCTION_ARGS)
       PG_RETURN_TEXT_P(cstring_to_text("0"));
     case 1:
       PG_RETURN_TEXT_P(cstring_to_text("1"));
-    case -9223372036854775808L:  /* greater than 64-bit sign flip value */
-    case -9223372036854775809L:
-      PG_RETURN_NULL();  /* avoid overflow by simply punting */
     default:
       /* Fall through to continue processing */
       break;
@@ -52,6 +49,10 @@ formatbase(PG_FUNCTION_ARGS)
 
   /* Flip negatives for numeric operations below */
   if (is_negative) {
+    /* greater than 64-bit sign flip value */
+    if (val == -9223372036854775808LL) {
+      PG_RETURN_NULL();  /* avoid overflow by simply punting */
+    }
     val = -val;
   }
 
