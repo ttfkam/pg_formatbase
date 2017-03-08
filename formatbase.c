@@ -4,10 +4,10 @@
 
 PG_MODULE_MAGIC;
 
-PG_FUNCTION_INFO_V1(formatbase);
+PG_FUNCTION_INFO_V1(as_base);
 
 Datum
-formatbase(PG_FUNCTION_ARGS)
+as_base(PG_FUNCTION_ARGS)
 {
   static const char *IDX = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-";
 
