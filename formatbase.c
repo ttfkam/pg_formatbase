@@ -25,6 +25,7 @@ formatbase(PG_FUNCTION_ARGS)
 
   int64 val = PG_GETARG_INT64(0);
   int32 base = PG_GETARG_INT32(1);
+  bool is_negative = val < 0;
   int buffer_size;
   char *buffer;
 
@@ -41,8 +42,17 @@ formatbase(PG_FUNCTION_ARGS)
       PG_RETURN_TEXT_P(cstring_to_text("0"));
     case 1:
       PG_RETURN_TEXT_P(cstring_to_text("1"));
+    case -9223372036854775808L:  /* greater than 64-bit sign flip value */
+    case -9223372036854775809L:
+      PG_RETURN_NULL();  /* avoid overflow by simply punting */
     default:
       /* Fall through to continue processing */
+      break;
+  }
+
+  /* Flip negatives for numeric operations below */
+  if (is_negative) {
+    val = -val;
   }
 
   /* Set up the output buffer */
@@ -53,16 +63,6 @@ formatbase(PG_FUNCTION_ARGS)
   }
   buffer += (buffer_size - 1);
   *buffer = '\0';
-
-  /* Handle negatives and edge cases */
-  bool is_negative = val < 0;
-  if (is_negative) {
-    if (val < -9223372036854775807L) {  /* max 64-bit sign flip value */
-      /* avoid overflow by simply punting */
-      PG_RETURN_NULL();
-    }
-    val = -val;
-  }
 
   /* Write out the encoded number */
   while (val > 0 && --buffer) {
