@@ -14,7 +14,19 @@ LANGUAGE sql IMMUTABLE STRICT AS $$
   WHERE base <= 64
 $$;
 
+CREATE FUNCTION to_base(val integer, base integer)
+RETURNS text
+LANGUAGE sql IMMUTABLE STRICT AS $$
+  SELECT to_base(val::bigint, base);
+$$;
+
 CREATE FUNCTION as_base(bigint, integer)
 RETURNS text
 AS '$libdir/formatbase'
 LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION as_base(val integer, base integer)
+RETURNS text
+LANGUAGE sql IMMUTABLE STRICT AS $$
+  SELECT as_base(val::bigint, base);
+$$;
