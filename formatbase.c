@@ -4,27 +4,25 @@
 
 PG_MODULE_MAGIC;
 
-PG_FUNCTION_INFO_V1(as_base);
+PG_FUNCTION_INFO_V1(to_base);
 
 Datum
-as_base(PG_FUNCTION_ARGS)
+to_base(PG_FUNCTION_ARGS)
 {
-  static const char *IDX = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-";
-
+  static const char *MAP = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-";
   /* Sizes w/ trailing NULL & negative */
-  static const char BUF_SIZES[65] = {
-    -1,-1, /* Base-0 and base-1 are non-sensical. Dump out if we use them. */
-    65, /* binary */
-    42,34,30,27,25,
-    23, /* octal */
-    22,21,21,20,20,19,19,
-    18, /* hex */
-    18,18,17,17,17,17,16,16,16,16,16,16,15,15,15,15,15,15,15,15,15,15,14,14,14,
-    14,14,14,14,14,14,14,14,14,14,14,13,13,13,13,13,13,13,13,13,13,13,13
+  /* Base-0 and base-1 are non-sensical. Dump out if used. */
+  static const char BUF_SIZES[] = {
+  /* 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23*/
+    -1,-1,65,42,34,30,27,25,23,22,21,21,20,20,19,19,18,18,18,17,17,17,17,16,
+  /*24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47*/
+    16,16,16,16,16,15,15,15,15,15,15,15,15,15,15,14,14,14,14,14,14,14,14,14,
+  /*48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64*/
+    14,14,14,14,14,13,13,13,13,13,13,13,13,13,13,13,13
   };
 
-  int64 val = PG_GETARG_INT64(0);
-  int32 base = PG_GETARG_INT32(1);
+  int32 base = PG_GETARG_INT32(0);
+  int64 val = PG_GETARG_INT64(1);
   bool is_negative = val < 0;
   int buffer_size;
   char *buffer;
@@ -68,7 +66,7 @@ as_base(PG_FUNCTION_ARGS)
 
   /* Write out the encoded number */
   while (val > 0 && --buffer) {
-    *buffer = IDX[val % base];
+    *buffer = MAP[val % base];
     val /= base;
   }
   if (is_negative) {

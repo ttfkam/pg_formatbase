@@ -1,32 +1,13 @@
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
 \echo Use "CREATE EXTENSION formatbase" to load this file. \quit
 
-CREATE FUNCTION to_base(val bigint, base integer)
-RETURNS text
-LANGUAGE sql IMMUTABLE STRICT AS $$
-  WITH cte AS (
-    SELECT regexp_split_to_array(
-      '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-',
-      '') AS idx
-  )
-  SELECT regexp_replace(string_agg(idx[((val / pow(base, g))::int % base) + 1], ''), '^0{1,63}', '')
-  FROM generate_series(63, 0, -1) AS g, cte
-  WHERE base <= 64 AND base > 1
-$$;
-
-CREATE FUNCTION to_base(val integer, base integer)
-RETURNS text
-LANGUAGE sql IMMUTABLE STRICT AS $$
-  SELECT to_base(val::bigint, base);
-$$;
-
-CREATE FUNCTION as_base(bigint, integer)
+CREATE FUNCTION to_base(int4, int8)
 RETURNS text
 AS '$libdir/formatbase'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION as_base(val integer, base integer)
+CREATE FUNCTION to_base(base int4, val int4)
 RETURNS text
 LANGUAGE sql IMMUTABLE STRICT AS $$
-  SELECT as_base(val::bigint, base);
+  SELECT to_base(base,val::int8);
 $$;
