@@ -48,7 +48,7 @@ to_base(PG_FUNCTION_ARGS)
   /* Flip negatives for numeric operations below */
   if (is_negative) {
     /* greater than 64-bit sign flip value (one more negative than positive) */
-    if (val == 0xFFFFFFFFFFFFFFFFLL) {
+    if (val == 0x8000000000000000LL) {
       /* Avoid overflow by simply punting */
       elog(ERROR, "Negative input value too large");
     }
