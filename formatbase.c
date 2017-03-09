@@ -4,7 +4,7 @@
 
 PG_MODULE_MAGIC;
 
-void validate_base(int32 base) {
+static void validate_base(int32 base) {
   /* Base-0 & base-1 are non-sensical. Nothing about base-64 supported. */
   if (base < 2 || base > 64) {
 		ereport(ERROR,
@@ -12,13 +12,13 @@ void validate_base(int32 base) {
 				errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
 				errmsg("output base out of range"),
 				errdetail("base '%d' is not allowed", base),
-				errhint("base must be between 2 and 64", base)
+				errhint("base must be between 2 and 64")
 			)
     );
   }
 }
 
-int buffer_size(base) {
+static int buffer_size(int32 base) {
   /* Sizes w/ trailing NULL & negative */
   /* Base-0 and base-1 are non-sensical. Dump out if used. */
   static const char BUF_SIZES[] = {
@@ -123,8 +123,8 @@ parse_base(PG_FUNCTION_ARGS)
   char *val = VARDATA(src);
   int len = VARSIZE(src) - VARHDRSZ;
   int64 result = 0;
-  int i = 0;
   bool is_negative = FALSE;
+  char next;
 
   validate_base(base);
 
@@ -151,7 +151,7 @@ parse_base(PG_FUNCTION_ARGS)
   }
   while (val) {
     result *= base;
-    char next = *val;
+    next = *val;
     if (next < START_OFFSET || next > END_OFFSET || next == -1) {
       ereport(ERROR,
         (
