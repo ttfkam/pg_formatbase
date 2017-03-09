@@ -11,3 +11,8 @@ RETURNS text
 LANGUAGE sql IMMUTABLE STRICT AS $$
   SELECT to_base(base,val::int8);
 $$;
+
+CREATE FUNCTION parse_base(int4, text)
+RETURNS int8
+AS '$libdir/formatbase'
+LANGUAGE C IMMUTABLE STRICT;
