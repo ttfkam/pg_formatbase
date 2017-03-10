@@ -138,9 +138,9 @@ parse_base(PG_FUNCTION_ARGS)
 
   int32 base = PG_GETARG_INT32(0);
   text *src = PG_GETARG_TEXT_P(1);
-  const char *map = lookup_map(base);
-  char *val = VARDATA(src);
   int len = VARSIZE(src) - VARHDRSZ;
+  const char *map = lookup_map(base);
+  char *val;
   int64 result = 0;
   bool is_negative = FALSE;
   char next;
@@ -157,21 +157,33 @@ parse_base(PG_FUNCTION_ARGS)
 		);
   }
   if (len > buffer_size(base)) {
-			ereport(ERROR,
-				(
-					errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-					errmsg("input value too large to fit in bigint"),
-					errdetail("value '%s' cannot be encoded", val)
-				)
-      );
+		ereport(ERROR,
+			(
+				errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+				errmsg("input value too large to fit in bigint"),
+				errdetail("value '%s' cannot be encoded", val)
+			)
+		);
   }
-  if (len > 1 && *val == '-') {
-    is_negative = TRUE;
-    ++val;
+  val = palloc(len + 1);
+  memcpy(val, VARDATA(src), len);
+  val[len] = '\0';
+  if (*val == '-') {
+    if (len > 1) {
+      is_negative = TRUE;
+      ++val;
+    } else {
+      ereport(ERROR,
+        (
+          errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+          errmsg("'-' is not a valid number")
+        )
+      );
+    }
   }
   while ((next = *val)) {
     jumpchar = next - START_OFFSET;
-    if (next < START_OFFSET || next > END_OFFSET ||
+    if (jumpchar < 0 || next > END_OFFSET ||
         map[jumpchar] > base || map[jumpchar] < 0) {
       ereport(ERROR,
         (
