@@ -33,6 +33,35 @@ static int buffer_size(int32 base) {
   return BUF_SIZES[base];
 }
 
+static const char *lookup_map(int32 base) {
+  /* Map text characters to numeric values */
+  /* Note: the repetition of letter mappings allows case-insensitivity */
+  static const char LOWER_MAP[] = {
+  /* 0 1 2 3 4 5 6 7 8 9  :  ;  <  =  >  ?  @  A  B  C  D  E  F  G  H  I*/
+     0,1,2,3,4,5,6,7,8,9,-1,-1,-1,-1,-1,-1,-1,10,11,12,13,14,15,16,17,18,
+  /* J  K  L  M  N  O  P  Q  R  S  T  U  V  W  X  Y  Z  [  \  ]  ^  _  `*/
+    19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,-1,-1,-1,-1,-1,-1,
+  /* a  b  c  d  e  f  g  h  i  j  k  l  m  n  o  p  q  r  s  t  u  v  w*/
+    10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,
+  /* x  y  z*/
+    33,34,35
+  };
+
+  static const char UPPER_MAP[] = {
+  /* 0 1 2 3 4 5 6 7 8 9  :  ;  <  =  >  ?  @  A  B  C  D  E  F  G  H  I*/
+     0,1,2,3,4,5,6,7,8,9,-1,-1,-1,-1,-1,-1,-1,36,37,38,39,40,41,42,43,44,
+  /* J  K  L  M  N  O  P  Q  R  S  T  U  V  W  X  Y  Z  [  \  ]  ^  _  `*/
+    45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-1,62,63,
+  /* a  b  c  d  e  f  g  h  i  j  k  l  m  n  o  p  q  r  s  t  u  v  w*/
+    10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,
+  /* x  y  z*/
+    33,34,35
+  };
+
+  /* Allow case-insensitivity when using base36 or lower */
+  return base > 36 ? UPPER_MAP : LOWER_MAP;
+}
+
 PG_FUNCTION_INFO_V1(to_base);
 
 Datum
@@ -106,20 +135,10 @@ parse_base(PG_FUNCTION_ARGS)
 {
   static const int START_OFFSET = 48;
   static const int END_OFFSET = 122;
-  /* Map text characters to numeric values */
-  static const char MAP[] = {
-  /* 0 1 2 3 4 5 6 7 8 9  :  ;  <  =  >  ?  @  A  B  C  D  E  F  G  H  I*/
-     0,1,2,3,4,5,6,7,8,9,-1,-1,-1,-1,-1,-1,-1,36,37,38,39,40,41,42,43,44,
-  /* J  K  L  M  N  O  P  Q  R  S  T  U  V  W  X  Y  Z  [  \  ]  ^  _  `*/
-    45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-1,-1,63,
-  /* a  b  c  d  e  f  g  h  i  j  k  l  m  n  o  p  q  r  s  t  u  v  w*/
-    10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,
-  /* x  y  z*/
-    33,34,35
-  };
 
   int32 base = PG_GETARG_INT32(0);
   text *src = PG_GETARG_TEXT_P(1);
+  const char *map = lookup_map(base);
   char *val = VARDATA(src);
   int len = VARSIZE(src) - VARHDRSZ;
   int64 result = 0;
@@ -146,15 +165,14 @@ parse_base(PG_FUNCTION_ARGS)
 				)
       );
   }
-  if (len > 0 && *val == '-') {
+  if (len > 1 && *val == '-') {
     is_negative = TRUE;
     ++val;
   }
-  while (*val) {
-    result *= base;
-    next = *val;
+  while (next = *val) {
     jumpchar = next - START_OFFSET;
-    if (next < START_OFFSET || next > END_OFFSET || MAP[jumpchar] > base || MAP[jumpchar] < 0) {
+    if (next < START_OFFSET || next > END_OFFSET ||
+        map[jumpchar] > base || map[jumpchar] < 0) {
       ereport(ERROR,
         (
           errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -164,7 +182,8 @@ parse_base(PG_FUNCTION_ARGS)
         )
       );
     }
-    result += MAP[jumpchar];
+    result *= base;
+    result += map[jumpchar];
     ++val;
   }
   if (is_negative) {
