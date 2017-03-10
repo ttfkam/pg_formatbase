@@ -169,7 +169,7 @@ parse_base(PG_FUNCTION_ARGS)
     is_negative = TRUE;
     ++val;
   }
-  while (next = *val) {
+  while ((next = *val)) {
     jumpchar = next - START_OFFSET;
     if (next < START_OFFSET || next > END_OFFSET ||
         map[jumpchar] > base || map[jumpchar] < 0) {
