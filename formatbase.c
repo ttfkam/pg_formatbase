@@ -125,6 +125,7 @@ parse_base(PG_FUNCTION_ARGS)
   int64 result = 0;
   bool is_negative = FALSE;
   char next;
+  int jumpchar;
 
   validate_base(base);
 
@@ -149,10 +150,11 @@ parse_base(PG_FUNCTION_ARGS)
     is_negative = TRUE;
     ++val;
   }
-  while (val) {
+  while (*val) {
     result *= base;
     next = *val;
-    if (next < START_OFFSET || next > END_OFFSET || next == -1) {
+    jumpchar = next - START_OFFSET;
+    if (next < START_OFFSET || next > END_OFFSET || MAP[jumpchar] > base || MAP[jumpchar] < 0) {
       ereport(ERROR,
         (
           errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -162,7 +164,7 @@ parse_base(PG_FUNCTION_ARGS)
         )
       );
     }
-    result += MAP[next - START_OFFSET];
+    result += MAP[jumpchar];
     ++val;
   }
   if (is_negative) {
