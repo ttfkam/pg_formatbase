@@ -184,7 +184,7 @@ parse_base(PG_FUNCTION_ARGS)
   while ((next = *val)) {
     jumpchar = next - START_OFFSET;
     if (jumpchar < 0 || next > END_OFFSET ||
-        map[jumpchar] > base || map[jumpchar] < 0) {
+        map[jumpchar] >= base || map[jumpchar] < 0) {
       ereport(ERROR,
         (
           errcode(ERRCODE_INVALID_PARAMETER_VALUE),
