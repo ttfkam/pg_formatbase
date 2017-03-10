@@ -156,6 +156,9 @@ parse_base(PG_FUNCTION_ARGS)
 			)
 		);
   }
+  val = palloc(len + 1);
+  memcpy(val, VARDATA(src), len);
+  val[len] = '\0';
   if (len > buffer_size(base)) {
 		ereport(ERROR,
 			(
@@ -165,9 +168,6 @@ parse_base(PG_FUNCTION_ARGS)
 			)
 		);
   }
-  val = palloc(len + 1);
-  memcpy(val, VARDATA(src), len);
-  val[len] = '\0';
   if (*val == '-') {
     if (len > 1) {
       is_negative = TRUE;
