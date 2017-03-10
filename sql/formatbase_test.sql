@@ -1,4 +1,5 @@
 CREATE EXTENSION formatbase;
+-- number to formatted text
 SELECT to_base(-1, 64356543);
 SELECT to_base( 0, 64356543);
 SELECT to_base( 1, 64356543);
@@ -69,3 +70,6 @@ SELECT to_base(65, 64356543);
 SELECT to_base(36, '9223372036854775807'::int8);
 SELECT to_base(36, '-9223372036854775807'::int8);
 SELECT to_base(36, '-9223372036854775808'::int8);
+-- formatted text to number
+SELECT parse_base(16, 'deadbeef');
+SELECT parse_base( 2, '101010101010101');

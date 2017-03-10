@@ -11,7 +11,7 @@ static void validate_base(int32 base) {
 			(
 				errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
 				errmsg("output base out of range"),
-				errdetail("base '%d' is not allowed", base),
+				errdetail("base %d is not allowed", base),
 				errhint("base must be between 2 and 64")
 			)
     );
