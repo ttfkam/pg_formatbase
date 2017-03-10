@@ -140,7 +140,7 @@ parse_base(PG_FUNCTION_ARGS)
   text *src = PG_GETARG_TEXT_P(1);
   int len = VARSIZE(src) - VARHDRSZ;
   const char *map = lookup_map(base);
-  char *val;
+  char *val = NULL;
   int64 result = 0;
   bool is_negative = FALSE;
   char next;
