@@ -143,7 +143,6 @@ from_base(PG_FUNCTION_ARGS)
   if (*val == '-') {
     if (len > 1) {
       is_negative = TRUE;
-      result = -1;
       ++val;
     } else {
       ereport(ERROR,
