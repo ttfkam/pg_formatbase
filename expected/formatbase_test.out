@@ -1,0 +1,325 @@
+CREATE EXTENSION formatbase;
+--
+-- number to formatted text
+--
+SELECT text(64356543, -1);  -- Should fail
+ERROR:  output base out of range
+DETAIL:  base -1 is not allowed
+HINT:  base must be between 2 and 64
+CONTEXT:  SQL function "text" statement 1
+SELECT text(64356543, 0);   -- Should fail
+ERROR:  output base out of range
+DETAIL:  base 0 is not allowed
+HINT:  base must be between 2 and 64
+CONTEXT:  SQL function "text" statement 1
+SELECT text(64356543, 1);   -- Should fail
+ERROR:  output base out of range
+DETAIL:  base 1 is not allowed
+HINT:  base must be between 2 and 64
+CONTEXT:  SQL function "text" statement 1
+SELECT text(64356543, base)
+  FROM generate_series(2, 64) AS base;  -- Should succeed
+            text            
+----------------------------
+ 11110101100000000010111111
+ 11111002122120200
+ 3311200002333
+ 112433402133
+ 10215214543
+ 1411010256
+ 365400277
+ 144078520
+ 64356543
+ 33367029
+ 19677453
+ 10443bc4
+ 879379d
+ 59b3913
+ 3d600bf
+ 2b59400
+ 1g11159
+ 16ifei9
+ 1024b73
+ ffj446
+ cag019
+ 9mm9md
+ 81na2f
+ 6eikbi
+ 5alfph
+ 4d2hfi
+ 3kjjbr
+ 33slo4
+ 2jdh83
+ 27l89g
+ 1tc05v
+ 1l8qu9
+ 1e5dph
+ 17v0xd
+ 12bdtr
+ ycjx1
+ uww99
+ rvzCu
+ p5mxn
+ mvvrw
+ ksrcr
+ izj5y
+ h7m0v
+ fvb0i
+ eh8bd
+ d8EB7
+ c5Ipf
+ b812F
+ aeGuH
+ 9q800
+ 8FApH
+ 88eIl
+ 7uC7J
+ 71IMR
+ 6upLT
+ 65t69
+ 5DMTx
+ 5ikTP
+ 4VUN3
+ 4Dwui
+ 4m24L
+ 45nOr
+ 3Rw2`
+(63 rows)
+
+SELECT text(64356543, 65);  -- Should fail
+ERROR:  output base out of range
+DETAIL:  base 65 is not allowed
+HINT:  base must be between 2 and 64
+CONTEXT:  SQL function "text" statement 1
+-- Test upper bounds
+SELECT text('9223372036854775807'::int8, 36);
+     text      
+---------------
+ 1y2p0ij32e8e7
+(1 row)
+
+SELECT text('-9223372036854775807'::int8, 36);
+      text      
+----------------
+ -1y2p0ij32e8e7
+(1 row)
+
+SELECT text('-9223372036854775808'::int8, 36);
+      text      
+----------------
+ -1y2p0ij32e8e8
+(1 row)
+
+--
+-- formatted text to number
+--
+-- Valid base 16
+SELECT int8('123456789abcdef'::text, 16);
+       int8        
+-------------------
+ 81985529216486895
+(1 row)
+
+SELECT int8('-123456789abcdef'::text, 16);
+        int8        
+--------------------
+ -81985529216486895
+(1 row)
+
+SELECT int4('1234567f'::text, 16);
+   int4    
+-----------
+ 305419903
+(1 row)
+
+SELECT int4('-1234567f'::text, 16);
+    int4    
+------------
+ -305419903
+(1 row)
+
+SELECT int2('123f'::text, 16);
+ int2 
+------
+ 4671
+(1 row)
+
+SELECT int2('-123f'::text, 16);
+ int2  
+-------
+ -4671
+(1 row)
+
+-- Invalid for base 16
+SELECT int8('123456789abcdefg'::text, 16);
+ERROR:  invalid character found in encoded value
+DETAIL:  digit 'g' is not allowed
+HINT:  use only digits found in base 16
+SELECT int8('123456789ABCDEFG'::text, 16);
+ERROR:  invalid character found in encoded value
+DETAIL:  digit 'G' is not allowed
+HINT:  use only digits found in base 16
+-- Base 36- should be case insensitive and give the same answer
+SELECT int8('aaaaaaaa'::text, base) = int8('AAAAAAAA'::text, base),
+       int8('-aaaaaaaa'::text, base) = int8('-AAAAAAAA'::text, base),
+       int4('aaaaa'::text, base) = int8('AAAAA'::text, base),
+       int4('-aaaaa'::text, base) = int8('-AAAAA'::text, base),
+       int2('aa'::text, base) = int8('AA'::text, base),
+       int2('-aa'::text, base) = int8('-AA'::text, base)
+  FROM generate_series(11, 36) AS base;
+ ?column? | ?column? | ?column? | ?column? | ?column? | ?column? 
+----------+----------+----------+----------+----------+----------
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+(26 rows)
+
+-- Base 37+ should be case sensitive and yield different results
+SELECT int8('aaaaaaaa'::text, base) <> int8('AAAAAAAA'::text, base),
+       int8('-aaaaaaaa'::text, base) <> int8('-AAAAAAAA'::text, base),
+       int4('aaaaa'::text, base) <> int8('AAAAA'::text, base),
+       int4('-aaaaa'::text, base) <> int8('-AAAAA'::text, base),
+       int2('aa'::text, base) <> int8('AA'::text, base),
+       int2('-aa'::text, base) <> int8('-AA'::text, base)
+  FROM generate_series(37, 64) AS base;
+ ?column? | ?column? | ?column? | ?column? | ?column? | ?column? 
+----------+----------+----------+----------+----------+----------
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+ t        | t        | t        | t        | t        | t
+(28 rows)
+
+-- Parse all the bases
+SELECT int8('10101010'::text, base),
+       int8('-10101010'::text, base),
+       int4('10101'::text, base),
+       int4('-10101'::text, base),
+       int2('10'::text, base),
+       int2('-10'::text, base)
+  FROM generate_series(2, 64) AS base;
+     int8      |      int8      |   int4   |   int4    | int2 | int2 
+---------------+----------------+----------+-----------+------+------
+           170 |           -170 |       21 |       -21 |    2 |   -2
+          2460 |          -2460 |       91 |       -91 |    3 |   -3
+         17476 |         -17476 |      273 |      -273 |    4 |   -4
+         81380 |         -81380 |      651 |      -651 |    5 |   -5
+        287934 |        -287934 |     1333 |     -1333 |    6 |   -6
+        840700 |        -840700 |     2451 |     -2451 |    7 |   -7
+       2130440 |       -2130440 |     4161 |     -4161 |    8 |   -8
+       4842756 |       -4842756 |     6643 |     -6643 |    9 |   -9
+      10101010 |      -10101010 |    10101 |    -10101 |   10 |  -10
+      19649564 |      -19649564 |    14763 |    -14763 |   11 |  -11
+      36082380 |      -36082380 |    20881 |    -20881 |   12 |  -12
+      63122020 |      -63122020 |    28731 |    -28731 |   13 |  -13
+     105954086 |     -105954086 |    38613 |    -38613 |   14 |  -14
+     171622140 |     -171622140 |    50851 |    -50851 |   15 |  -15
+     269488144 |     -269488144 |    65793 |    -65793 |   16 |  -16
+     411763460 |     -411763460 |    83811 |    -83811 |   17 |  -17
+     614115450 |     -614115450 |   105301 |   -105301 |   18 |  -18
+     896354716 |     -896354716 |   130683 |   -130683 |   19 |  -19
+    1283208020 |    -1283208020 |   160401 |   -160401 |   20 |  -20
+    1805181924 |    -1805181924 |   194923 |   -194923 |   21 |  -21
+    2499522190 |    -2499522190 |   234741 |   -234741 |   22 |  -22
+    3411273980 |    -3411273980 |   280371 |   -280371 |   23 |  -23
+    4594447896 |    -4594447896 |   332353 |   -332353 |   24 |  -24
+    6113296900 |    -6113296900 |   391251 |   -391251 |   25 |  -25
+    8043709154 |    -8043709154 |   457653 |   -457653 |   26 |  -26
+   10474721820 |   -10474721820 |   532171 |   -532171 |   27 |  -27
+   13510160860 |   -13510160860 |   615441 |   -615441 |   28 |  -28
+   17270411876 |   -17270411876 |   708123 |   -708123 |   29 |  -29
+   21894327030 |   -21894327030 |   810901 |   -810901 |   30 |  -30
+   27541273084 |   -27541273084 |   924483 |   -924483 |   31 |  -31
+   34393325600 |   -34393325600 |  1049601 |  -1049601 |   32 |  -32
+   42657614340 |   -42657614340 |  1187011 |  -1187011 |   33 |  -33
+   52568824906 |   -52568824906 |  1337493 |  -1337493 |   34 |  -34
+   64391861660 |   -64391861660 |  1501851 |  -1501851 |   35 |  -35
+   78424676964 |   -78424676964 |  1680913 |  -1680913 |   36 |  -36
+   95001271780 |   -95001271780 |  1875531 |  -1875531 |   37 |  -37
+  114494872670 |  -114494872670 |  2086581 |  -2086581 |   38 |  -38
+  137321290236 |  -137321290236 |  2314963 |  -2314963 |   39 |  -39
+  163942464040 |  -163942464040 |  2561601 |  -2561601 |   40 |  -40
+  194870199044 |  -194870199044 |  2827443 |  -2827443 |   41 |  -41
+  230670098610 |  -230670098610 |  3113461 |  -3113461 |   42 |  -42
+  271965699100 |  -271965699100 |  3420651 |  -3420651 |   43 |  -43
+  319442811116 |  -319442811116 |  3750033 |  -3750033 |   44 |  -44
+  373854072420 |  -373854072420 |  4102651 |  -4102651 |   45 |  -45
+  436023717574 |  -436023717574 |  4479573 |  -4479573 |   46 |  -46
+  506852569340 |  -506852569340 |  4881891 |  -4881891 |   47 |  -47
+  587323256880 |  -587323256880 |  5310721 |  -5310721 |   48 |  -48
+  678505665796 |  -678505665796 |  5767203 |  -5767203 |   49 |  -49
+  781562625050 |  -781562625050 |  6252501 |  -6252501 |   50 |  -50
+  897755835804 |  -897755835804 |  6767803 |  -6767803 |   51 |  -51
+ 1028452047220 | -1028452047220 |  7314321 |  -7314321 |   52 |  -52
+ 1175129484260 | -1175129484260 |  7893291 |  -7893291 |   53 |  -53
+ 1339384532526 | -1339384532526 |  8505973 |  -8505973 |   54 |  -54
+ 1522938685180 | -1522938685180 |  9153651 |  -9153651 |   55 |  -55
+ 1727645756984 | -1727645756984 |  9837633 |  -9837633 |   56 |  -56
+ 1955499370500 | -1955499370500 | 10559251 | -10559251 |   57 |  -57
+ 2208640719490 | -2208640719490 | 11319861 | -11319861 |   58 |  -58
+ 2489366614556 | -2489366614556 | 12120843 | -12120843 |   59 |  -59
+ 2800137816060 | -2800137816060 | 12963601 | -12963601 |   60 |  -60
+ 3143587659364 | -3143587659364 | 13849563 | -13849563 |   61 |  -61
+ 3522530977430 | -3522530977430 | 14780181 | -14780181 |   62 |  -62
+ 3939973325820 | -3939973325820 | 15756931 | -15756931 |   63 |  -63
+ 4399120515136 | -4399120515136 | 16781313 | -16781313 |   64 |  -64
+(63 rows)
+
+-- Invalid for any base
+SELECT int8('-', 2);
+ERROR:  '-' is not a valid number
+SELECT int8('-', 8);
+ERROR:  '-' is not a valid number
+SELECT int8('-', 16);
+ERROR:  '-' is not a valid number
+SELECT int8('-', 36);
+ERROR:  '-' is not a valid number
+SELECT int8('-', 64);
+ERROR:  '-' is not a valid number
