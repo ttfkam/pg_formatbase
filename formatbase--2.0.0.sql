@@ -1,7 +1,7 @@
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
 \echo Use "CREATE EXTENSION formatbase" to load this file. \quit
 
-CREATE FUNCTION text(int4, int8)
+CREATE FUNCTION text(int8, int4)
 RETURNS text
 AS '$libdir/formatbase', 'to_base_text'
 LANGUAGE C IMMUTABLE STRICT;
