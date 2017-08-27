@@ -3,7 +3,7 @@
 
 CREATE FUNCTION text(int8, int4)
 RETURNS text
-AS '$libdir/formatbase', 'to_base_text'
+AS '$libdir/formatbase', 'to_base'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION text(val int4, base int4)
@@ -14,7 +14,7 @@ $$;
 
 CREATE FUNCTION int8(text, int4)
 RETURNS int8
-AS '$libdir/formatbase', 'from_base_int8'
+AS '$libdir/formatbase', 'from_base'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION int4(val text, base int4)
