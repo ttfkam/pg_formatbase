@@ -1,5 +1,5 @@
 EXTENSION = formatbase        # the extensions name
-DATA = formatbase--1.0.0.sql  # script files to install
+DATA = formatbase--2.0.0.sql  # script files to install
 REGRESS = formatbase_test     # test script file (without extension)
 MODULES = formatbase          # c module file to build
 

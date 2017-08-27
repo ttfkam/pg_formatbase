@@ -4,50 +4,63 @@ CREATE EXTENSION formatbase;
 -- number to formatted text
 --
 
-SELECT to_base(-1, 64356543);
-SELECT to_base( 0, 64356543);
-SELECT to_base( 1, 64356543);
-SELECT to_base(base, 64356543) FROM generate_series(2, 64) AS base;
-SELECT to_base(65, 64356543);
+SELECT text(64356543, -1);  -- Should fail
+SELECT text(64356543, 0);   -- Should fail
+SELECT text(64356543, 1);   -- Should fail
+SELECT text(64356543, base) FROM generate_series(2, 64) AS base;  -- Should succeed
+SELECT text(64356543, 65);  -- Should fail
 
--- Test upper values
-SELECT to_base(36, '9223372036854775807'::int8);
-SELECT to_base(36, '-9223372036854775807'::int8);
-SELECT to_base(36, '-9223372036854775808'::int8);
+-- Test upper bounds
+SELECT text('9223372036854775807'::int8, 36);
+SELECT text('-9223372036854775807'::int8, 36);
+SELECT text('-9223372036854775808'::int8, 36);
 
 --
 -- formatted text to number
 --
 
 -- Valid base 16
-SELECT parse_base(16, '123456789abcdef');
-SELECT parse_base(16, '-123456789abcdef');
-SELECT parse_base(16, '123456789ABCDEF');
-SELECT parse_base(16, '-123456789ABCDEF');
-
--- Base 36 should be case insensitive and give the same answer
-SELECT parse_base(36, 'deadbeef');
-SELECT parse_base(36, 'DEADBEEF');
-SELECT parse_base(36, '-deadbeef');
-SELECT parse_base(36, '-DEADBEEF');
-
--- Base >36 should be case sensitive and yield different results
-SELECT parse_base(48, 'deadbeef');
-SELECT parse_base(48, 'DEADBEEF');
-SELECT parse_base(48, '-deadbeef');
-SELECT parse_base(48, '-DEADBEEF');
-
--- Parse binary
-SELECT parse_base( 2, '101010101010101');
-SELECT parse_base( 2, '-101010101010101');
+SELECT int8('123456789abcdef', 16);
+SELECT int8('-123456789abcdef', 16);
+SELECT int4('1234567f', 16);
+SELECT int4('-1234567f', 16);
+SELECT int2('123f', 16);
+SELECT int2('-123f', 16);
 
 -- Invalid for base 16
-SELECT parse_base(16, '123456789abcdefg');
-SELECT parse_base(16, '123456789ABCDEFG');
+SELECT int8('123456789abcdefg', 16);
+SELECT int8('123456789ABCDEFG', 16);
+
+-- Base 36- should be case insensitive and give the same answer
+SELECT int8('aaaaaaaa', base) = int8('AAAAAAAA', base),
+       int8('-aaaaaaaa', base) = int8('-AAAAAAAA', base),
+       int4('aaaaa', base) = int8('AAAAA', base),
+       int4('-aaaaa', base) = int8('-AAAAA', base),
+       int2('aa', base) = int8('AA', base),
+       int2('-aa', base) = int8('-AA', base)
+  FROM generate_series(11, 36) AS base;
+
+-- Base 37+ should be case sensitive and yield different results
+SELECT int8('aaaaaaaa', base) <> int8('AAAAAAAA', base),
+       int8('-aaaaaaaa', base) <> int8('-AAAAAAAA', base),
+       int4('aaaaa', base) <> int8('AAAAA', base),
+       int4('-aaaaa', base) <> int8('-AAAAA', base),
+       int2('aa', base) <> int8('AA', base),
+       int2('-aa', base) <> int8('-AA', base)
+  FROM generate_series(37, 64) AS base;
+
+-- Parse all the bases
+SELECT int8('10101010'),
+       int8('-10101010'),
+       int4('10101'),
+       int4('-10101'),
+       int2('10'),
+       int2('-10')
+  FROM generate_series(2, 64) AS base;
 
 -- Invalid for any base
-SELECT parse_base( 2, '-');
-SELECT parse_base( 8, '-');
-SELECT parse_base(16, '-');
-SELECT parse_base(36, '-');
-SELECT parse_base(64, '-');
+SELECT int8('-', 2);
+SELECT int8('-', 8);
+SELECT int8('-', 16);
+SELECT int8('-', 36);
+SELECT int8('-', 64);

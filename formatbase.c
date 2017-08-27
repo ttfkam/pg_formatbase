@@ -4,63 +4,49 @@
 
 PG_MODULE_MAGIC;
 
-static void validate_base(int32 base) {
-  /* Base-0 & base-1 are non-sensical. Nothing about base-64 supported. */
+#define MAP_END 122
+
+static inline void
+validate_base(int32 base) {
+  /* Base-0 & base-1 are non-sensical. Nothing above base-64 supported. */
   if (base < 2 || base > 64) {
-		ereport(ERROR,
-			(
-				errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-				errmsg("output base out of range"),
-				errdetail("base %d is not allowed", base),
-				errhint("base must be between 2 and 64")
-			)
+    ereport(ERROR,
+      (
+        errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+        errmsg("output base out of range"),
+        errdetail("base %d is not allowed", base),
+        errhint("base must be between 2 and 64")
+      )
     );
   }
 }
 
-static int buffer_size(int32 base) {
-  /* Sizes w/ trailing NULL & negative */
-  /* Base-0 and base-1 are non-sensical. Dump out if used. */
-  static const char BUF_SIZES[] = {
-  /* 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21*/
-    -1,-1,65,42,34,30,27,25,23,22,21,21,20,20,19,19,18,18,18,17,17,17,
-  /*22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43*/
-    17,16,16,16,16,16,16,15,15,15,15,15,15,15,15,15,15,14,14,14,14,14,
-  /*44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64*/
-    14,14,14,14,14,14,14,14,14,13,13,13,13,13,13,13,13,13,13,13,13
-  };
+/* Sizes w/ trailing NULL & negative */
+/* Base-0 and base-1 are non-sensical. Dump out if used. */
+static const int8 BUFFER_SIZES[65] = {
+  -1,-1,65,42,34,30,27,25,23,22,21,21,20,20,19,19,    /*  0-15 */
+  18,18,18,17,17,17,17,16,16,16,16,16,16,15,15,15,    /* 16-31 */
+  15,15,15,15,15,15,15,14,14,14,14,14,14,14,14,14,    /* 32-47 */
+  14,14,14,14,14,13,13,13,13,13,13,13,13,13,13,13,13  /* 48-64 */
+};
 
-  return BUF_SIZES[base];
-}
+/* Map text characters to numeric values */
+/* Note: the repetition of letter mappings allows case-insensitivity */
+static const int8 LOWER_MAP[] = {
+   0, 1, 2, 3, 4, 5, 6, 7, 8, 9,-1,-1,-1,-1,-1,-1,
+  -1,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,
+  25,26,27,28,29,30,31,32,33,34,35,-1,-1,-1,-1,-1,
+  -1,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,
+  25,26,27,28,29,30,31,32,33,34,35
+};
 
-static const char *lookup_map(int32 base) {
-  /* Map text characters to numeric values */
-  /* Note: the repetition of letter mappings allows case-insensitivity */
-  static const char LOWER_MAP[] = {
-  /* 0 1 2 3 4 5 6 7 8 9  :  ;  <  =  >  ?  @  A  B  C  D  E  F  G  H  I*/
-     0,1,2,3,4,5,6,7,8,9,-1,-1,-1,-1,-1,-1,-1,10,11,12,13,14,15,16,17,18,
-  /* J  K  L  M  N  O  P  Q  R  S  T  U  V  W  X  Y  Z  [  \  ]  ^  _  `*/
-    19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,-1,-1,-1,-1,-1,-1,
-  /* a  b  c  d  e  f  g  h  i  j  k  l  m  n  o  p  q  r  s  t  u  v  w*/
-    10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,
-  /* x  y  z*/
-    33,34,35
-  };
-
-  static const char UPPER_MAP[] = {
-  /* 0 1 2 3 4 5 6 7 8 9  :  ;  <  =  >  ?  @  A  B  C  D  E  F  G  H  I*/
-     0,1,2,3,4,5,6,7,8,9,-1,-1,-1,-1,-1,-1,-1,36,37,38,39,40,41,42,43,44,
-  /* J  K  L  M  N  O  P  Q  R  S  T  U  V  W  X  Y  Z  [  \  ]  ^  _  `*/
-    45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-1,62,63,
-  /* a  b  c  d  e  f  g  h  i  j  k  l  m  n  o  p  q  r  s  t  u  v  w*/
-    10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,
-  /* x  y  z*/
-    33,34,35
-  };
-
-  /* Allow case-insensitivity when using base36 or lower */
-  return base > 36 ? UPPER_MAP : LOWER_MAP;
-}
+static const int8 UPPER_MAP[] = {
+   0, 1, 2, 3, 4, 5, 6, 7, 8, 9,-1,-1,-1,-1,-1,-1,
+  -1,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,
+  51,52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-1,62,
+  63,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,
+  25,26,27,28,29,30,31,32,33,34,35
+};
 
 PG_FUNCTION_INFO_V1(to_base);
 
@@ -70,10 +56,10 @@ to_base(PG_FUNCTION_ARGS)
   static const char *MAP =
       "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_`";
 
-  int32 base = PG_GETARG_INT32(0);
-  int64 val = PG_GETARG_INT64(1);
+  int64 val = PG_GETARG_INT64(0);
+  int32 base = PG_GETARG_INT32(1);
   bool is_negative = val < 0;
-  int size = buffer_size(base);
+  int size = BUFFER_SIZES(base);
   char *buffer;
 
   validate_base(base);
@@ -96,12 +82,12 @@ to_base(PG_FUNCTION_ARGS)
     /* greater than 64-bit sign flip value (one more negative than positive) */
     if (val == 0x8000000000000000LL) {
       /* Avoid overflow by simply punting */
-			ereport(ERROR,
-				(
-					errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-					errmsg("negative input value too large"),
-					errdetail("value '-9223372036854775808' cannot be encoded")
-				)
+      ereport(ERROR,
+        (
+          errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+          errmsg("negative input value too large"),
+          errdetail("value '-9223372036854775808' cannot be encoded")
+        )
       );
     }
     val = -val;
@@ -128,45 +114,41 @@ to_base(PG_FUNCTION_ARGS)
   PG_RETURN_TEXT_P(cstring_to_text(buffer));
 }
 
-PG_FUNCTION_INFO_V1(parse_base);
+PG_FUNCTION_INFO_V1(from_base);
 
 Datum
-parse_base(PG_FUNCTION_ARGS)
+from_base(PG_FUNCTION_ARGS)
 {
-  static const int START_OFFSET = 48;
-  static const int END_OFFSET = 122;
-
-  int32 base = PG_GETARG_INT32(0);
-  text *src = PG_GETARG_TEXT_P(1);
+  text *src = PG_GETARG_TEXT_P(0);
+  int32 base = PG_GETARG_INT32(1);
   int len = VARSIZE(src) - VARHDRSZ;
-  const char *map = lookup_map(base);
-  char *val = NULL;
+  const int8 *map = base > 36 ? UPPER_MAP : LOWER_MAP;
+  unsigned char *val = NULL;
   int64 result = 0;
   bool is_negative = FALSE;
-  char next;
-  int jumpchar;
+  unsigned char next;  /* saves an extra comparison to negative numbers */
 
   validate_base(base);
 
   if (len == 0) {
-		ereport(ERROR,
-			(
-				errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				errmsg("empty text value not allowed")
-			)
-		);
+    ereport(ERROR,
+      (
+        errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+        errmsg("empty text value not allowed")
+      )
+    );
   }
   val = palloc(len + 1);
   memcpy(val, VARDATA(src), len);
   val[len] = '\0';
-  if (len > buffer_size(base)) {
-		ereport(ERROR,
-			(
-				errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-				errmsg("input value too large to fit in bigint"),
-				errdetail("value '%s' cannot be encoded", val)
-			)
-		);
+  if (len > buffer_sizes[base]) {
+    ereport(ERROR,
+      (
+        errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+        errmsg("input value too large to fit in bigint"),
+        errdetail("value '%s' cannot be encoded", val)
+      )
+    );
   }
   if (*val == '-') {
     if (len > 1) {
@@ -181,10 +163,8 @@ parse_base(PG_FUNCTION_ARGS)
       );
     }
   }
-  while ((next = *val)) {
-    jumpchar = next - START_OFFSET;
-    if (jumpchar < 0 || next > END_OFFSET ||
-        map[jumpchar] >= base || map[jumpchar] < 0) {
+  while ((next = *val++)) {
+    if (next > MAP_END || map[next] >= base || map[next] < 0) {
       ereport(ERROR,
         (
           errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -195,8 +175,7 @@ parse_base(PG_FUNCTION_ARGS)
       );
     }
     result *= base;
-    result += map[jumpchar];
-    ++val;
+    result += map[next];
   }
   if (is_negative) {
     result *= -1;
