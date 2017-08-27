@@ -6,13 +6,13 @@ RETURNS text
 AS '$libdir/formatbase', 'to_base'
 LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION text(val int4, base int4)
+CREATE FUNCTION text(num int4, base int4)
 RETURNS text
 LANGUAGE sql IMMUTABLE STRICT AS $$
-  SELECT text(base,val::int8);
+  SELECT text(num::int8, base);
 $$;
 
-CREATE FUNCTION int8(text, int4)
+CREATE FUNCTION int8(val text, base int4)
 RETURNS int8
 AS '$libdir/formatbase', 'from_base'
 LANGUAGE C IMMUTABLE STRICT;
