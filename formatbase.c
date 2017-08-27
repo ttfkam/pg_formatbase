@@ -5,6 +5,7 @@
 PG_MODULE_MAGIC;
 
 #define MAP_END 122
+#define MAP_OFFSET 48
 
 static inline void
 validate_base(int32 base) {
@@ -142,6 +143,7 @@ from_base(PG_FUNCTION_ARGS)
   if (*val == '-') {
     if (len > 1) {
       is_negative = TRUE;
+      result = -1;
       ++val;
     } else {
       ereport(ERROR,
@@ -152,23 +154,25 @@ from_base(PG_FUNCTION_ARGS)
       );
     }
   }
-  while ((next = *val - 48)) {
-    if (next > MAP_END || map[next] >= base || map[next] < 0) {
+  while ((next = *val)) {
+    next -= MAP_OFFSET;
+    if (next < 0 || next > MAP_END || map[next] >= base || map[next] < 0) {
       ereport(ERROR,
         (
           errcode(ERRCODE_INVALID_PARAMETER_VALUE),
           errmsg("invalid character found in encoded value"),
-          errdetail("digit '%c' is not allowed", next),
+          errdetail("digit '%c' is not allowed", next + MAP_OFFSET),
           errhint("use only digits found in base %d", base)
         )
       );
     }
     result *= base;
-    result += map[next];
+    if (is_negative) {
+      result -= map[next];
+    } else {
+      result += map[next];
+    }
     ++val;
-  }
-  if (is_negative) {
-    result *= -1;
   }
   PG_RETURN_INT64(result);
 }
