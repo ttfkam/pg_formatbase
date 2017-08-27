@@ -23,7 +23,7 @@ validate_base(int32 base) {
 
 /* Sizes w/ trailing NULL & negative */
 /* Base-0 and base-1 are non-sensical. Dump out if used. */
-static const int8 BUFFER_SIZES[65] = {
+static const int8 BUFFER_SIZES[] = {
   -1,-1,65,42,34,30,27,25,23,22,21,21,20,20,19,19,    /*  0-15 */
   18,18,18,17,17,17,17,16,16,16,16,16,16,15,15,15,    /* 16-31 */
   15,15,15,15,15,15,15,14,14,14,14,14,14,14,14,14,    /* 32-47 */
@@ -141,7 +141,7 @@ from_base(PG_FUNCTION_ARGS)
   val = palloc(len + 1);
   memcpy(val, VARDATA(src), len);
   val[len] = '\0';
-  if (len > buffer_sizes[base]) {
+  if (len > BUFFER_SIZES[base]) {
     ereport(ERROR,
       (
         errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
