@@ -77,22 +77,6 @@ to_base(PG_FUNCTION_ARGS)
       break;
   }
 
-  /* Flip negatives for numeric operations below */
-  if (is_negative) {
-    /* greater than 64-bit sign flip value (one more negative than positive) */
-    if (val == 0x8000000000000000LL) {
-      /* Avoid overflow by simply punting */
-      ereport(ERROR,
-        (
-          errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-          errmsg("negative input value too large"),
-          errdetail("value '-9223372036854775808' cannot be encoded")
-        )
-      );
-    }
-    val = -val;
-  }
-
   /* Set up the output buffer */
   buffer = palloc(sizeof(char) * size);
   if (buffer == NULL) {  /* out of memory */
@@ -102,6 +86,11 @@ to_base(PG_FUNCTION_ARGS)
   *buffer = '\0';
 
   /* Write out the encoded number */
+  if (is_negative) {
+      --buffer;
+      *buffer = MAP[-(val % base)];
+      val /= -base;
+  }
   while (val > 0 && --buffer) {
     *buffer = MAP[val % base];
     val /= base;
@@ -163,7 +152,7 @@ from_base(PG_FUNCTION_ARGS)
       );
     }
   }
-  while ((next = *val++)) {
+  while (next = *val - 48) {
     if (next > MAP_END || map[next] >= base || map[next] < 0) {
       ereport(ERROR,
         (
@@ -176,6 +165,7 @@ from_base(PG_FUNCTION_ARGS)
     }
     result *= base;
     result += map[next];
+    ++val;
   }
   if (is_negative) {
     result *= -1;
