@@ -152,7 +152,7 @@ from_base(PG_FUNCTION_ARGS)
       );
     }
   }
-  while (next = *val - 48) {
+  while ((next = *val - 48)) {
     if (next > MAP_END || map[next] >= base || map[next] < 0) {
       ereport(ERROR,
         (
