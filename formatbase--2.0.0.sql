@@ -18,13 +18,13 @@ AS '$libdir/formatbase', 'from_base'
 LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION int4(val text, base int4)
-RETURNS text
+RETURNS int4
 LANGUAGE sql IMMUTABLE STRICT AS $$
   SELECT int8(val, base)::int4;
 $$;
 
 CREATE FUNCTION int2(val text, base int4)
-RETURNS text
+RETURNS int2
 LANGUAGE sql IMMUTABLE STRICT AS $$
   SELECT int8(val, base)::int2;
 $$;
