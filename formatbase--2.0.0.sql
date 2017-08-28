@@ -12,6 +12,12 @@ LANGUAGE sql IMMUTABLE STRICT AS $$
   SELECT text(num::int8, base);
 $$;
 
+CREATE FUNCTION text(num int2, base int4)
+RETURNS text
+LANGUAGE sql IMMUTABLE STRICT AS $$
+  SELECT text(num::int8, base);
+$$;
+
 CREATE FUNCTION int8(val text, base int4)
 RETURNS int8
 AS '$libdir/formatbase', 'from_base'
