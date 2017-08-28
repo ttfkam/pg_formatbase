@@ -34,3 +34,21 @@ SELECT int4('ff', 16);      -- returns 255::int4
 SELECT int8('-p5m', 36);    -- returns -32602::int8
 SELECT int2(text(7, 2), 2); -- returns 7::int2
 ```
+
+## Install
+
+On the database server run the following:
+```bash
+$ git clone https://github.com/ttfkam/pg_formatbase.git
+
+$ cd pg_formatbase
+
+$ make
+
+$ sudo make install
+```
+
+Connect to your database and run the following:
+```sql
+CREATE EXTENSION formatbase;
+```
