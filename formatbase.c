@@ -85,7 +85,7 @@ to_base(PG_FUNCTION_ARGS)
 	buffer = palloc(sizeof(char) * size);
 	if (buffer == NULL)
 	{
-		ereport(ERROR
+		ereport(ERROR,
 				(errcode(ERRCODE_OUT_OF_MEMORY),
 				errmsg_internal("could not allocate buffer for output")));
 	}
