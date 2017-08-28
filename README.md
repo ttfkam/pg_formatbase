@@ -15,7 +15,7 @@ text(num smallint, base integer)
 
 ### Text to number
 
-The base can be any value between 2 (binary) and 64. Each function returns a type of the same name, e.g., int2('ff', 16) returns the int2 (aka smallint, 16-bit integer) value 255.
+The base can be any value between 2 (binary) and 64. Each function returns a type of the same name, e.g., `int2('ff', 16)` returns the `int2` (aka `smallint`, 16-bit integer) value 255.
 
 ```sql
 int8(value text, base integer)
