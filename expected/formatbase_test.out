@@ -152,11 +152,11 @@ SELECT int2('-123f'::text, 16);
 
 -- Invalid for base 16
 SELECT int8('123456789abcdefg'::text, 16);
-ERROR:  invalid character found in encoded value
+ERROR:  invalid character in encoded value
 DETAIL:  digit 'g' is not allowed
 HINT:  use only digits found in base 16
 SELECT int8('123456789ABCDEFG'::text, 16);
-ERROR:  invalid character found in encoded value
+ERROR:  invalid character in encoded value
 DETAIL:  digit 'G' is not allowed
 HINT:  use only digits found in base 16
 -- Base 36- should be case insensitive and give the same answer
