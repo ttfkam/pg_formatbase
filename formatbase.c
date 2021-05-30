@@ -12,12 +12,10 @@ validate_base(int32 base) {
 	/* Negative bases, 0, and 1 are non-sensical. Nothing above base-64 supported. */
 	if (base < 2 || base > 64) {
 		ereport(ERROR,
-				(errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+			(errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
 				errmsg("output base out of range"),
 				errdetail("base %d is not allowed", base),
-				errhint("base must be between 2 and 64")
-			)
-		);
+				errhint("base must be between 2 and 64")));
 	}
 }
 
@@ -86,7 +84,7 @@ to_base(PG_FUNCTION_ARGS)
 	if (buffer == NULL)
 	{
 		ereport(ERROR,
-				(errcode(ERRCODE_OUT_OF_MEMORY),
+			(errcode(ERRCODE_OUT_OF_MEMORY),
 				errmsg_internal("could not allocate buffer for output")));
 	}
 	buffer += (size - 1);
@@ -95,9 +93,9 @@ to_base(PG_FUNCTION_ARGS)
 	/* Write out the encoded number */
 	if (is_negative)
 	{
-			--buffer;
-			*buffer = MAP[-(val % base)];
-			val /= -base;
+		--buffer;
+		*buffer = MAP[-(val % base)];
+		val /= -base;
 	}
 	while (val > 0 && --buffer)
 	{
