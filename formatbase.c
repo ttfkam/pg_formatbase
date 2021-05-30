@@ -9,7 +9,7 @@ PG_MODULE_MAGIC;
 
 static inline void
 validate_base(int32 base) {
-	/* Base-0 & base-1 are non-sensical. Nothing above base-64 supported. */
+	/* Negative bases, 0, and 1 are non-sensical. Nothing above base-64 supported. */
 	if (base < 2 || base > 64) {
 		ereport(ERROR,
 				(errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
@@ -24,7 +24,7 @@ validate_base(int32 base) {
 /* Sizes w/ trailing NULL & negative */
 /* Base-0 and base-1 are non-sensical. Dump out if used. */
 static const int BUFFER_SIZES[] = {
-	-1,-1,65,42,34,30,27,25,23,22,21,21,20,20,19,19,		/*	0-15 */
+	-1,-1,65,42,34,30,27,25,23,22,21,21,20,20,19,19,		/*  0-15 */
 	18,18,18,17,17,17,17,16,16,16,16,16,16,15,15,15,		/* 16-31 */
 	15,15,15,15,15,15,15,14,14,14,14,14,14,14,14,14,		/* 32-47 */
 	14,14,14,14,14,13,13,13,13,13,13,13,13,13,13,13,13	/* 48-64 */
@@ -54,7 +54,7 @@ Datum
 to_base(PG_FUNCTION_ARGS)
 {
 	static const char *MAP =
-			"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_`";
+		"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_`";
 
 	int64 val = PG_GETARG_INT64(0);
 	int32 base = PG_GETARG_INT32(1);
@@ -141,7 +141,7 @@ from_base(PG_FUNCTION_ARGS)
 	if (len > BUFFER_SIZES[base])
 	{
 		ereport(ERROR,
-				(errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+			(errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
 				errmsg("input value too large to fit in bigint"),
 				errdetail("value '%s' cannot be encoded", val)));
 	}
@@ -155,7 +155,7 @@ from_base(PG_FUNCTION_ARGS)
 		else
 		{
 			ereport(ERROR,
-					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 					errmsg("'-' is not a valid number")));
 		}
 	}
@@ -165,7 +165,7 @@ from_base(PG_FUNCTION_ARGS)
 		if (next < 0 || next > MAP_END || map[next] >= base || map[next] < 0)
 		{
 			ereport(ERROR,
-					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 					errmsg("invalid character in encoded value"),
 					errdetail("digit '%c' is not allowed", next + MAP_OFFSET),
 					errhint("use only digits found in base %d", base)));
